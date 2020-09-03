@@ -1,0 +1,118 @@
+---
+title: "Module 2 Lecture, Continued"
+author: Dr. Cassy Dorff
+output: github_document
+---
+
+In the online lecture, you learned about data.table basics. Today I've also given you a quick zoom lecture on visualization concepts. Now we will compare data.table to the tidyverse approach while getting started with a few very basic data visualizations. 
+
+```{r}
+# load data
+load("ncbreweries.rdata") 
+
+# use the commands from the earlier part of the 
+# lesson to check the dimension, set up, and variable names
+colnames(ncbreweries)
+dim(ncbreweries)
+head(ncbreweries)
+class(ncbreweries)
+
+# check out using tidyverse
+library(tidyverse)
+glimpse(ncbreweries)
+```
+
+_What do we see?_
+
+In the columns we see attributes that contain information about each Brewery. This information is easy to "read" but might prove difficult, in this format, for plotting and analysis.
+
+"Long" formatted data (versus wide) is useful for visualization because each **variable** (or attribute) is represented by a column. Long form is closer to the "tidy" format since it is easy to transform.  Wide form is useful when looking at multiple lines / series on a graph or when making tables for quick comparison.
+
+Using some quick indexing, how would we view the different type of breweries available in the data?
+
+```{r echo=TRUE}
+# try to create a new object called "temp" that subsects ncbreweries by the "type" variable
+temp <- ncbreweries[, type]
+```
+
+Why didn't the above code work? What does the error indicate?
+
+```{r}
+temp <- ncbreweries[, "type"]
+```
+
+You might think you can resolve this by recognizing the 'character' format of 'type.' (See above). That won't work later when we use data.table commands. So we need to go ahead and turn this into a data.table object in R.
+
+```{r}
+ncbreweries<-as.data.table(ncbreweries)
+```
+
+## In groups:
+
+review data.table and how it works together. Have one person share their screen and everyone discuss what the code does. If you have a question, put it in the class slack channel. The TA or Prof will come to your room or answer on slack. 
+
+How can we calculate the mean beer count for each type of brewery? (There are five types)?
+
+```{r}
+ncb_mean_bc<-ncbreweries[, .(meanBeerCount = mean(beercount, na.rm = TRUE)), by = type]
+```
+
+What if you wanted to know the earliest year each type of brewery was established, and the overall mean beer count for each type of brewery?
+
+```{r}
+# try in groups
+
+```
+
+Now let's think a little about visualization, what is an easy plot for visualizing a trend from this particular data using base R?
+
+```{r}
+
+
+```
+
+Earlier we saw that microbreweries were established quite a long time ago, and yet the simple plot above showing the frequencies of observations broken down by time tells us that not many breweries were in north carolina until the last 3 decades.
+
+To investigate this further, later on your own, how might we look at this similar trend across types of breweries?
+
+*STOP HERE* and rejoin class. We will break into groups again after a code review.
+
+## Comparison to Tidy Data
+
+You have already learned about `tidy data` which we will focus on next for the basis of visualization. In general you can do a lot of great things both in base R and in the tidyverse. You should always work on improving both skillsets! Sometimes base R really comes in handy, especially when working with "big" data.
+
+Now, how can we calculate the mean beer count for each type of brewery? (There are five types) using a tidy approach?
+
+```{r}
+# recall:
+ncb_mean_bc <- ncbreweries[, .(meanBeerCount = mean(beercount, na.rm = TRUE)), by = type]
+ncb_mean_bc
+
+# in tidy (try in groups)
+
+```
+
+Next, can you make a simple graphic of this data using ggplot?
+
+
+```{r}
+# try in groups
+
+```
+
+----
+
+
+
+## references for data.table & today's lecture
+*The last one is particularly useful! *
+
+- https://rawgit.com/wiki/Rdatatable/data.table/vignettes/datatable-intro.html
+- https://github.com/arunsrinivasan/flights
+- https://www.datacamp.com/community/tutorials/data-table-r-tutorial
+- https://stackoverflow.com/questions/27886839/what-does-error-object-myvariable-not-found-mean
+- https://www.listendata.com/2016/10/r-data-table.html
+- https://cran.r-project.org/web/packages/data.table/vignettes/datatable-intro.html
+- https://rcompanion.org/handbook/C_04.html
+- https://www.infoworld.com/article/3530348/r-datatable-symbols-and-operators-you-should-know.html
+- https://cran.r-project.org/web/packages/data.table/vignettes/datatable-faq.html
