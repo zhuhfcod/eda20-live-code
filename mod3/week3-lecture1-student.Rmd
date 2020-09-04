@@ -1,0 +1,215 @@
+---
+title: "Week 3 Day 1 Lecture Student Copy"
+output:
+  pdf_document: default
+  html_notebook: default
+  html_document:
+    df_print: paged
+editor_options:
+  chunk_output_type: console
+---
+
+## Learning objectives Week 3/Mod 3:
+
+- `ggplot`; aesthetics and geoms
+- plotting univariate and bivariate data
+- scatterplot 
+
+```{r}
+library(ggplot2)
+```
+
+Today we will start with ggplot. The first thing to note about ggplot is that is uses data frames, not vectors like base R (which we saw last time). This means that we will, typically speaking, first create a dataframe that can be used for our plotting purposes. Let's explore this concept with the 'midwest' data.
+
+```{r}
+# Demographic information of midwest counties
+# https://ggplot2.tidyverse.org/reference/midwest.html
+data("midwest", package = "ggplot2")
+```
+
+Take a moment to examine the data. Since this is from the `ggplot` package, this data is already 'tidy'. What does it mean for data to be 'tidy'?
+
+In tidy data:
+
+- Each variable forms a column.
+- Each observation forms a row.
+- Each type of observational unit forms a table.
+
+```{r echo = T, results = 'hide'}
+# what is the general layout of the data?
+
+
+
+# what are the dimensions?
+
+
+# how can we get a quick stat summary of each variable
+
+
+# is midwest a dataframe?
+
+```
+
+MidWest Region Dataset is focused on the population, economic and education level of all the 5 midwest states (Illinois, Indiana, Wisconsin, Ohio and Michigan)
+
+We can already begin to explore the data graphically. Let's examine whether there is a clear relationship between land area and population total in the midwest.
+
+```{r}
+# area and poptotal are columns in 'midwest'
+
+
+```
+
+What do we notice? 
+
+Using different columns from the midwest data set, ggplot gives you a graph but with nothing plotted on the coordinates. This is because ggplot does not assume you want a specific type of plot, it only uses this information to draw the axes. 
+
+Note that *aes* is used to _map_ values from the data frame columns onto axes. It is very important to begin to notice why some elements go inside *aes* while others do not. Aesthetic mappings describe how variables in the data are mapped to visual properties (aesthetics).
+
+Now let's add points to the plot.
+
+```{r}
+# simple bivariate examination requires a geom
+ggplot(midwest, aes(x=area, y=poptotal))  
+
+```
+
+Adding `geom_point()` gives us a basic scatterplot of the data. There are many ‘geoms’ – i.e., graphical representations of the data in the plot (points, lines, bars), including:
+
+* `geom_point()` for scatter plots, dot plots, etc.
+* `geom_boxplot()` for, well, boxplots!
+* `geom_line()` for trend lines, time series, etc.  
+
+Let's just work with the point geom for now. What if we wanted to change the color of the points? We can do this easily without using an aesthetic, but just setting the `col=` argument within the geom.
+
+```{r}
+ggplot(midwest, aes(x=area, y=poptotal)) +
+      geom_point(color="steelblue")
+```
+
+But let's think about this for a second. Knowing what we now know from our earlier lesson on graphics. Why would we want to change all the points to one color?
+
+Unless your graphic is a part of a larger color scheme or visualization that embeds the graph into a larger color scheme, we'd probably not gain much by changing the color of all points to one color. Luckily, ggplot makes it easy to change colors according to attributes of the data-- which is much more interesting! 
+
+Let's change the color of these points to something more revealing.
+
+Let's start with data that we can think of as 'big buckets': the state boundary. Because we are *mapping* a variable to an object, we will need to use the aesthetics function. 
+
+Note! Color goes in a different spot than the last chunk of code. That is because we are mapping a variable *to* color for points on the graph.
+
+```{r}
+ggplot(midwest, aes(x=area, y=poptotal)) +
+      
+```
+
+These points are a bit small, and it is hard for us to interpret the colors here. Let's make them bigger to see if that helps. Because we want all the points to be bigger, we will not be using the `aes` function since we are not mapping size to a specific variable. In the case below, we are simply telling ggplot to change all of the points' size and alpha. 
+
+```{r}
+ggplot(midwest, aes(x=area, y=poptotal)) +
+      
+```
+
+Now we can see a bit more about the relationship between area and population across midwestern states in the US (but it is still not great).
+
+So far, we have worked with three important layers:
+
+- data 
+- aesthetic 
+- geom
+
+We can also add layers that relate to the general theme of the graphic. Just building off of this very basic example, let's apply some of the visualization principals to remaking this graphic. Below is just an example for you to explore.
+
+Let's start with the theme and labels. There are two ways to utilize the ggplot themes. One is to set the theme for all your plots ahead of time: `theme_set(theme_classic())` another is to set your theme for each plot and add it as a layer, as shown below. You can also change the theme components individually.
+
+Options: Allow the user to set and examine a variety of global options which affect the way in which R computes and displays its results. Check out `?options` and `options` for more information.
+
+```{r}
+# turn off scientific notation
+options(scipen=999)
+
+g1 <- ggplot(midwest, aes(x=area, y=poptotal)) +
+      geom_point(aes(col=state), size=3, alpha=.5)
+
+# adding theme Layer itself.
+g1 <- g1 + theme_bw() + 
+           labs(subtitle="BW Theme")
+g1 <- g1 + theme_classic() + 
+          labs(subtitle="Classic Theme")
+
+```
+
+Let's make the labels more legible. To do this we need to consider both the axes labels.
+
+```{r}
+g1 <- ggplot(midwest, aes(x=area, y=poptotal)) +
+      geom_point(aes(col=state), size=3, alpha=.5)
+
+g1 <- g1 + labs(
+            title="Population vs. Area", 
+            subtitle="Midwest Demographics", 
+            y="Population", 
+            x="Area"
+            ) + 
+      theme_classic()
+```
+
+Bonus: the tick marks for the scales might be a bit difficult for someone to read. Since we saved our last plot as `g1` we can just keep layering. We can use a function here to set the labels to our desired output.  Explore this little embedded function on your own! Can you break down it's components?
+
+```{r}
+# Change Axis Texts
+g1 <- g1 + scale_y_continuous(
+            breaks=seq(0, 1000000, 200000), 
+            labels = function(x){paste0(x/1000, 'K')}
+            )
+g1
+```
+
+Why does that look so funny? Because we changed the population labels without actually changing the limits of the coordinates. Lets make a new object to easily compare and improve our coding best practices.
+
+```{r}
+midwest_pop <- ggplot(midwest, aes(x=area, y=poptotal)) +
+            
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+midwest_pop
+```
+
+# Interpretation
+
+After all that, what can we say about this graphic? 
+
+- Instructor interpretation:  For the conclusion, I would say from the graph there isn't a clear relationship between area and population. For the features, I think plotting data from five states in one graph makes it harder to interpret. Though the use of different colors and setting alpha help us visualize the data. If I am interested in summary statements about the population in this area, I might go back to the data to look at what else might be correlated with population demographics.
+
+Why might we use gridlines? Why might we not?
+
+- Instructor interpretation: We use gridlines when we feel it's necessary to locate points on graphs. We don't use gridlines when we want to see a general trends rather than specific numbers. 
+
+## on your own:
+
+Make an original scatterplot using the same midwest data below:
+
+```{r}
+
+
+
+
+
+
+```
+
+Maybe area matters less than population density!
+
+## References
+
+- https://www.datanovia.com/en/blog/ggplot-colors-best-tricks-you-will-love/
+- http://r-statistics.co/Complete-Ggplot2-Tutorial-Part1-With-R-Code.html
+- https://ggplot2.tidyverse.org/reference/scale_brewer.html
+- https://tutorials.iq.harvard.edu/R/Rgraphics/Rgraphics.html
