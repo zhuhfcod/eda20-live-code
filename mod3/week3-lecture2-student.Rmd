@@ -1,0 +1,112 @@
+---
+title: "Mod 3: Scatterplots and bivariate relationships"
+output:
+  pdf_document: default
+  html_notebook: default
+editor_options:
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = T,
+                      results = "hide")
+```
+
+## Learning objectives Mod 3 Synch Lecture:
+
+- `ggplot`; aesthetics and geoms
+- gain familiarity with inspecting the data
+- gain familiarity with plotting bivariate relationships
+
+### Getting Started
+
+Let's load some data. The original data source is shown in the link below. There is even an updated version of this data you might decide to play around with! here:
+
+- https://data.nashville.gov/Education/Metro-Nashville-Public-Schools-Open-Data/dfdd-wpcd
+
+```{r message=FALSE, warning=FALSE}
+# packages you need libraried for today
+library(dplyr)
+library(ggplot2)
+metro_nash_schools <- read.csv("metro-nash-schools.csv")
+head(metro_nash_schools)
+```
+
+
+## In groups
+### ~15 minutes: Explore the data
+
+Make sure everyone in your group can load the data. Then explore this data. Write down your answers. You can do this screensharing one persons computer and sharing the file afterwards, or writing all at once. It is up to you. 
+
+- What is the data's structure? 
+- What kind of information does it contain? 
+- What is the unit of analysis?
+- What kind of questions might we be able to ask about this data? Write them down. 
+
+Write your answers: 
+
+```{r}
+# student code: 
+
+```
+
+### ~30 minutes: Summarize and begin plotting
+
+1. Can you summarize and pinpoint a few key variables of interest? 
+
+- What does the variable ``economically disadvantaged` seem to represent?
+- Are there any missing data for this variable? Is this variable an integer?
+- What does this variable represent in the data?
+
+Write your answers:
+
+```{r}
+#student code
+
+```
+
+It looks like Nashville measured gender in a strictly binary way. Maybe this will change in the future. For now, we could use these categories to get a rough estimate of the total population of students at the school. Try to create a new variable that is a summation of "male" and "female." Call this variable "total_pop." Hint: the mutate function, apply() or rowSums() functions be useful here
+
+Instructor example:
+
+```{r}
+#student code
+
+```
+
+Now, going back too our economically disadvantaged variable, what if we wanted to understand this as a porportion rather than a raw number? How can we use the above new variable to create another new variable that is called "econ_dis_prop"?
+
+```{r}
+#student code
+
+
+```
+
+Explore the data again. Is it easier to describe this variable across schools? YES!
+
+- Which schools has the highest proportion of economically disadvantaged students?
+- Which schools has the lowest proportion of economically disadvantaged students?
+
+```{r}
+#student code
+
+
+```
+
+Now that we have explored our data, it is time to explore it visually. Brainstorm with your group to try to create a meaningful graphic. Begin with a clear question. As an example, you might start with asking "is there a positive relationship between the number of economically disadvantaged students and english proficiency in public schools in Nashville?"
+
+```{r}
+# scatterplot, student code:
+
+
+
+
+```
+
+---
+
+## References
+
+-http://rstudio-pubs-static.s3.amazonaws.com/374857_5a23bad9783a43c1b102aa80aa5c1a7c.html
+
+-https://stackoverflow.com/questions/17502808/double-dots-in-a-ggplot
