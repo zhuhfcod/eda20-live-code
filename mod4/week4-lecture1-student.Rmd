@@ -1,0 +1,158 @@
+---
+title: "Mod 4: Distributions, Histograms, Densities"
+output:
+  pdf_document: default
+  html_notebook: default
+editor_options:
+  chunk_output_type: console
+---
+
+## Learning objectives Week 4 (module 4) Synch Lecture:
+
+- `ggplot`; aesthetics and geoms
+- plotting distributions, densities, histograms
+
+First, let's load some data about wine.
+(Data source)[https://archive.ics.uci.edu/ml/datasets/Wine+Quality]
+
+### Getting Started
+
+Load the data properly and investigate your data. 
+
+```{r}
+library(readr) 
+library(ggplot2)
+```
+
+What is readr? Always use your tools to answer questions. Try `?readr` in your console! As we can see readr is for reading csv and other standard "rectangular data."
+
+```{r}
+getwd() #check your wd
+winequality_red <- read_csv("winequality-red.csv")
+head(winequality_red)
+```
+
+That didn't work! It looks weird! What is going on? Can you load in the data properly? `read_csv()` and `read_tsv()` are special cases of the general `read_delim()`. They're useful for reading the most common types of data, comma separated values and tab separated values, respectively. This is a csv, but we need to specify the ";" demarcation between columns. This is one way to do that:
+
+```{r echo=TRUE}
+winequality_red <- read_delim("winequality-red.csv", ";")
+head(winequality_red)
+```
+
+### Investigating Relationships
+(From winefolly.com) "It’s a little known fact that the world’s largest wine producer, E. J.Gallo, built their empire off the success of their white wine called Thunderbird. The wine was originally designed to appeal to a young market and has now garnered cult status as a “bum wine.” Why was Thunderbird such a success? Well, simply put it has 20% alcohol by volume (ABV)."
+
+Take a moment to check the dimensions, structure, and layout of the data. How would you describe the data to an audience? 
+
+```{r eval=FALSE, include=FALSE}
+# what are the dimensions of the data?
+dim(winequality_red)
+str(winequality_red)
+head(winequality_red)
+```
+
+Let's apply lessons from last week and explore some relationships in our 'red wine' data to examine where there is relationship between quality ratings and alcohol content. Below, plot a scatterplot of the bivariate relationship  between wine quality vs. alcohol content.
+
+```{r}
+# student code:
+
+```
+
+Oh snap! This looks weird, why? Because we have stacked values for each quality. We can apply some random noise (jitter) to help us understand how many data points fall into each category.
+
+```{r}
+# student code: 
+
+```
+
+This is a nice start, as it quickly tells us that most of the wines in our data are of medium level quality, around 10% alcohol. 
+
+What if we also wanted to analyze how `fixed acidity` fits into the wine quality picture? This means that we are going to add a third variable to our graphic. Importantly, this variable can be mapped onto the points to express variation across points in the data on this third feature. 
+
+Bonus: you can read about and toy with the `viridis` package to play with color settings. Also apply label and theme layers.
+
+```{r}
+library(viridis)
+library(RColorBrewer)
+
+
+
+
+
+
+
+
+# you could also play around wtih sulphates, here we play with size which looks bad
+ggplot(winequality_red, aes(x=quality, y= alcohol)) +
+      geom_jitter(aes(size=sulphates))
+```
+
+### Investigating distributions 
+
+First, let's make a histogram. A **histogram** is a plot that uses bars to show the frequency distribution of a set of continuous data or an item of data in successive intervals. Let's focus on the 'alcohol' variable for exploring a histogram.
+
+```{r}
+
+
+```
+
+To construct a histogram, the data is split into intervals called bins. For each bin, the number of data points that fall into it are counted (frequency). The Y axis of the histogram represents the frequency and the X axis represents the variable.
+
+In ggplot when you make a histogram, the default is 'bins = 30'. We can use ‘binwidth’ to set how wide each bin is since 'binwidth' overrides 'bins'. Alternatively, we can use 'breaks' and 'seq' to set bin width. But in that case you should do a summary statistics first on the variable of interest to know its extreme values to help inform your decision making.
+
+Play with the graph below to alter the binwidth. Look up binwidth online, get familiar with it! Make sure you know what the seq() function does. Read this thread about the differences between binwidth and breaks: https://stackoverflow.com/questions/32102608/r-hist-vs-geom-hist-break-points
+
+```{r}
+# binwidth example
+ggplot(winequality_red, aes(alcohol)) +
+      geom_histogram(binwidth = .5)
+
+#use summary to see extreme values and then use breaks
+
+
+```
+
+To explore distributions of a single variable, sometimes we might want to think about the *density* curve. A density curve is a graph that shows probability. The area under the curve is equal to 100 percent of all probabilities. Usually represented as decimals, we can also say the area is equal to 1 (100% as a decimal of 1). 
+
+Make a density plot:
+
+```{r}
+
+
+```
+
+Combine the two layers on one graphic to create a histogram with density curve overlay. Note: In the ggplot2 package, the double dots approach will be replaced by the calc() function. Instead of using `..density..` to indicate that you want to use the density of the inherited aesthetic, you can use stat(density).
+
+```{r}
+#overlay with a transparent (alpha value) density plot
+
+
+
+```
+
+Additional lines like “mean” can be added to existing plots using geom_vline. See how this is an additional layer, and is nice for highlighting this statistical parameter of the data.
+
+```{r}
+ggplot(winequality_red, aes(x = alcohol)) +
+      geom_histogram(aes(y = ..density..), # the histogram will display "density" on its y-axis
+          binwidth = .5, colour = "blue", fill = "white") +
+      geom_density(alpha = .2, fill="#FF6655") +
+      geom_vline(aes(xintercept = mean(alcohol, na.rm = T)),
+          colour = "gray", linetype ="longdash", size = .8)
+```
+
+In cases where the variable has a long tail, you may want to do a log transformation on the variable so that its histogram and density plot looks normal. 
+
+```{r}
+#plot the histogram and density plot of variable 'chlorides'
+ggplot(winequality_red, aes(x = chlorides)) +
+      geom_histogram(aes(y = ..density..), colour = "black", fill = "white", binwidth = .01) +
+      geom_density(alpha = .2, fill="#FF6655") 
+
+#plot the histogram and density plot of the log-transformed variable log(chlorides)
+
+
+
+
+```
+
