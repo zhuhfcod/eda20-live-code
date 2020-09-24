@@ -1,0 +1,190 @@
+---
+title: "Week 5: Finishing up Distributions and Correlations"
+Professor: "Cassy Dorff"
+output:
+  html_document:
+    keep_md: true
+  pdf_document:
+    number_sections: yes
+    toc: yes
+subtitle: DSI-EDA 
+urlcolor: blue
+editor_options: 
+  chunk_output_type: console
+---
+
+## Introduction
+
+In weeks 3 and 4 of this course we learned how to visually inspect the distributions of univariate data using histograms and density plots. We also explored how boxplots can be useful for comparing across the distribution of variables across categories. We then learned about correlations and their corresponding scatterplots, and the ways in which we might investigate the strength of two variable's covariance using Pearson's Correlation Coefficient. 
+
+Today we will continue along these themes to wrap up this component of our course. First, I will show you a boxplot example that combines information from the `geom_point()` layer to present both boxplot and scatterplot information on a single graphic. On your own you will explore a graphic also commonly used to represent the shape of a distribution: the violin plot. 
+
+After this, we will revisit correlations by learning about correlograms (aka correlation matrices) and under what circumstances they might prove useful for our exploratory data analysis. 
+
+## Distributions, again!
+
+Today, for illustrative purposes, we will work with data from the `gapminder` package. The dataset contains information on life expectancy, GDP per capita, and population by country from 1952 to 2007 in increments of 5 years.
+
+```{r}
+library(gapminder)
+library(ggplot2)
+library(dplyr)
+
+head(gapminder)
+str(gapminder)
+?gapminder
+
+# let's rename it 
+df <- gapminder
+```
+
+Let's examine the distribution of variables across groups using boxplots. Recall from last class:
+
+- the box denotes the 25th and 75th percentile.
+- the dark line within the box represents the median.
+- the vertical lines reaching out from the box (a.k.a. the whiskers) denote the first quartile value minus 1.5 times the interquartile range and the third quartile value plus 1.5 times the interquartile range.
+- Points outside the lines (whiskers) represent outliers!
+
+Below, let's explore the relationship between life expectancy and region. To do so, we specify x and y in the first layer and then add the `geom_boxplot()` layer. 
+
+```{r}
+# together:
+ggplot(df, aes(x = continent, y = lifeExp)) +
+  geom_boxplot() +
+  labs(title = "Distribution of global life expectancy 1952-2007",
+       subtitle = "Data source: Gapminder package",
+       x = "Life expenctancy in years",
+       y = "Density") +
+  theme_bw()
+```
+
+FYI we can flip the axes by using the coord_flip() command. This might increase legibility, particularly if some of your distributions exhibit high spread.
+
+```{r}
+# together: 
+ggplot(subset(df),
+       aes(x = continent,
+           y = lifeExp)) +
+  geom_boxplot() +
+  labs(title = "Distribution of global life expectancy 1952-2007",
+       subtitle = "Data source: Gapminder package",
+       x = "Life expenctancy in years",
+       y = "Density") +
+  theme_bw() +
+  coord_flip()
+```
+
+Going back to the original layout: We can overlap the boxplot with the original observations using the `geom_point()` geom. This illustrates how many observations are included in each group. Make sure to specify `outlier.shape = NA` within `geom_boxplot()` so that the outliers are not plotted in the `boxplot()` layer, which would be confusing since we are also plotting points using the `geom_point()` geom.
+
+```{r}
+# together:
+ggplot(df,aes(x = continent,y = lifeExp)) +
+  geom_boxplot(outlier.shape = NA) +
+  labs(title = "Distribution of global life expectancy 1952-2007",
+       subtitle = "Data source: Gapminder package",
+       x = "Life expenctancy in years",
+       y = "Density") +
+  theme_bw() +
+  geom_point()
+```
+
+This is *confusing* because there is a lot of overplotting when we add all original observations to the plot. We can add jitter to the points--a method we've seen before! Recall, this just adds a small random value (i.e. noise) to each point in either direction in order to 'jitter' the points away from one another and increase the graph's interpretability. We can control the spread by using the width argument. We can also decrease the opacity of the points. The plot below shows that while Oceania has the highest median life expectancy, this value is based on a lot *fewer* observations as compared to other continents.
+
+```{r}
+# together:
+ggplot(df, aes(x = continent,y = lifeExp)) +
+  geom_boxplot(outlier.shape = NA) +
+  labs(title = "Distribution of global life expectancy 1952-2007",
+       subtitle = "Data source: Gapminder package",
+       x = "Life expenctancy in years",
+       y = "Density") +
+  theme_bw() +
+  geom_point(position = position_jitter(width = 0.15),
+             alpha = 0.2)
+```
+
+Though that looks quite nice, we might not think this is useful enough for our purposes. Perhaps we have more questions about the distributions and want other ways to inspect their shape. One option is to turn to violin plots. 
+
+**Violin plots** show the distribution's range and median but they also add kernel density estimation on each side. As [this excellent post](https://mode.com/blog/violin-plot-examples) describes, sometimes you want to know about 'where' the data is at: are most values clustered around the median? Wider sections of the violin plot represent a higher probability that members of the population will take on the given value.
+
+**Practice 1** In groups, please try to re-create the plot shown in my slides and posted to slack. Time: ~15-20 minutes. 
+
+Hints:
+
+- our 'x' and 'y' stay the same in our first layer
+- you need to look up a geom_ for 'violin' plots
+- you will need to add points with colors and (perhaps) other adjustments
+
+```{r}
+# students answer:
+
+
+
+
+
+
+
+```
+
+*STOP we will chat about this*
+
+## Correlation matrix
+
+As mentioned in the introduction, there is another way in which we might want to visualize correlations. Specifically, it can be useful to look for patterns in our data across multiple variables, rather than relying on the more narrow specification of a bivariate scatterplot. 
+
+A correlogram (or correlation matrix) allows us to analyse the relationship between each pair of numeric variables in a dataset. It gives a quick overview of many relationships in the data.
+
+
+```{r}
+# together:
+library(corrgram)
+corrgram(df, order=TRUE, lower.panel=panel.shade,
+  upper.panel=panel.pie, text.panel=panel.txt)
+```
+
+
+Look up the help file for `corrgram`, and change the arguments to produce different results. For example, change 'order' to NULL and upper.panel to NULL. What data does the plot automatically drop? What do the lines and colors mean? This is how you learn new visualizations and functions in R.
+
+```{r}
+# together
+corrgram(df, order=NULL, lower.panel=panel.shade,
+  upper.panel=NULL, text.panel=panel.txt)
+```
+
+The above example is a bit awkward due to the low number of variables. Note, there are many ways of creating correlograms in R. Here is another, `ggcorrplot` is available on github (shown below) which we will use to explore a familiar dataset.
+
+```{r}
+install.packages("ggcorrplot")
+library(ggcorrplot)
+```
+
+First, for the sake of illustration, let's look at the correlation of an easy familiar dataset, `mtcars`. Below we simply create a matrix of all the variables in mtcars using the `cor()` function which we went over last time!
+
+```{r}
+# Correlation matrix
+data(mtcars)
+corr <- round(cor(mtcars), 1)
+```
+
+Below, we can make a basic correlogram using this same numeric information. 
+
+```{r}
+# Plot
+ggcorrplot(corr)
+```
+
+Just by reading a bit more about this function, we can make this much more visually useful. First, we can pick colors that are a bit easier on the eyes, and add our own colors in the `colors` argument. We can also choose `type="lower"` so that the graph only prints the lower triangle of correlations. Then we can change the plot to represent correlations as a circle conditioned on the size of the correlation using the `method="circle` argument. Try to do all of this below to reproduce the figure shown in class.
+
+**Practice 2** In groups, reproduce the graphic shown on the projector in class. Time: ~10 minutes. Discuss the plot. Is it useful? When might these plots be most useful? Least useful?
+
+```{r}
+# students answer
+```
+
+
+## References 
+- https://indrajeetpatil.github.io/ggstatsplot/articles/web_only/ggcorrmat.html
+- https://www.statmethods.net/advgraphs/correlograms.html
+- https://github.com/thereseanders/workshop-dataviz-fsu
+- https://r-graph-gallery.com/correlogram.html
+- http://r-statistics.co/Top50-Ggplot2-Visualizations-MasterList-R-Code.html#Correlogram
