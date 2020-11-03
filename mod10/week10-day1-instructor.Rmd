@@ -1,0 +1,151 @@
+---
+title: "week9-day1-instructor.Rmd"
+author: "Colin Henry"
+date: "10/27/2020"
+output: html_document
+---
+
+## Loading data
+This chunk of code loads or installs packages we need for text analysis. I've written a custom function here to handle that; feel free to copy it or use your own. This chunk also loads the text data --- a pre-formatted subset of poems from the Poetry Foundation website.
+
+```{r}
+loadPkg = function(toLoad){
+  for(lib in toLoad){
+    if(! lib %in% installed.packages()[,1])
+    { install.packages(lib, repos='http://cran.rstudio.com/') }
+    suppressMessages( library(lib, character.only=TRUE) ) }
+}
+
+packs=c('tidyverse', 'tidytext', 'textdata')
+
+loadPkg(packs)
+
+df_poetry <- readRDS("subset-poetry-data.rds")
+
+```
+
+## Working with text data
+Our poetry data is contained in a dataframe. Let's take a look at what's included:
+
+```{r}
+dim(df_poetry)
+
+names(df_poetry)
+
+head(df_poetry)
+```
+
+Let's begin our text analysis with some very basic operations from TidyText. The `unnest_tokens` function is a *tokenizer* function. It splits text up into simple objects based on the first input --- this can be a word, sentence, ngram, or other options. It generates a dataframe containing the word (and we've included the id of the document the word is from here, as well).
+
+```{r}
+poem_words <- df_poetry %>% select(X, Poem) %>% unnest_tokens(word, Poem)
+head(poem_words)
+```
+
+Now, we'll generate a count of the words, sort by the number of times the word occurs, and then plot the top 15 words in a bar plot.
+
+```{r}
+poem_words %>% count(word, sort = T) %>% slice(1:15) %>% 
+  ggplot(aes(x = reorder(word, n, function(n) -n), y = n)) + 
+  geom_bar(stat = "identity") + 
+  theme_light() +
+  theme(axis.text.x = element_text(angle = 60, hjust = 1)) + 
+  xlab("Words")
+```
+
+This shouldn't be too surprising. Very common English stop words and articles dominate the text counts. Note, though, that text data can be *really* noisy, especially if you've obtained it through web scraping or from third-party social media data collection. There are often lots of artifacts floating around in these datasets. Some to look out for include:
+ - URLs
+ - Non-unicode characters --- always make sure you keep your text encoding straight, be it ASCII, UTF-8, or something else.
+ - Stop words
+ 
+What is a *stop word*? These are words that you most likely don't want to include in your analysis, and are often the most frequently used words in the language your text data is in. We should get rid of them before ranking thes words properly. Luckily, TidyText comes with built in English stop words! You can invoke them with `stop_words`. Take a look below:
+
+```{r}
+head(stop_words)
+```
+
+Now, we have stop words that are domain-specific. That is, stop words that are unique to a corpus of text. For Twitter data, for example, these include `https`, `t.co`, and so on. Here we might have domain specific words we want to exclude, but we haven't identified them yet. 
+
+Now, we'll get rid of words from the dataframe that match the TidyText stop words.
+
+```{r}
+better_poem_words <- poem_words %>% anti_join(stop_words)
+```
+
+```{r}
+better_poem_words %>% count(word, sort = T) %>% slice(1:15) %>% 
+  ggplot(aes(x = reorder(word, n, function(n) -n), y = n)) + 
+  geom_bar(stat = "identity") + 
+  theme_light() +
+  theme(axis.text.x = element_text(angle = 60, hjust = 1)) + 
+  xlab("Words")
+
+```
+
+Are there any words that we might want to exclude based on this list? I think we have a good argument for excluding "thou", "thy", and "thee", which are just Middle English stop words. Let's build a personal stop word list and apply it.
+
+```{r}
+personal_stop_words <- stop_words %>% select(-lexicon) %>% 
+  bind_rows(data.frame(word = c("thou", "thy","thee")))
+
+better_poem_words <- poem_words %>% anti_join(personal_stop_words)
+
+better_poem_words %>% count(word, sort = T) %>% slice(1:15) %>% 
+  ggplot(aes(x = reorder(word, n, function(n) -n), y = n)) + 
+  geom_bar(stat = "identity") + 
+  theme_light() +
+  theme(axis.text.x = element_text(angle = 60, hjust = 1)) + 
+  xlab("Words")
+
+```
+
+This is pretty good. You might find additional stop words like "hath" or "doth", but we're not English experts here. You'll likely have to have some expertise in the subject area you're researching or someone on your team you can consult to make analytical decisions like what stop words to include, however.
+
+## Sentiment analysis and TF-IDF
+
+Now, just the word count doesn't tell us all that much. Let's turn to a "better" count measure --- the term frequency inverse document frequency (tf-idf). What we're going to produce in this code chunk is a count of each word for each poem, plus a count of the total number of words in each poem. In other "words", the term frequency for each document.
+
+```{r}
+idf_words <- df_poetry %>% select(X, Poem) %>% 
+  unnest_tokens(word,Poem) %>% count(X, word, sort = T)
+
+better_idf_words <- idf_words %>% anti_join(personal_stop_words)
+
+poem_length <- better_idf_words %>% group_by(X) %>% summarize(total = sum(n()))
+
+better_idf_words <- left_join(better_idf_words, poem_length)
+```
+
+OK, let's get our tf-idf. Use the `bind_tf_idf` function to have R do this for you automatically. The first input is the word itself, the second is the id of the document, and finally the count of words per document.
+
+```{r}
+tfidf_words <- better_idf_words %>% bind_tf_idf(word, X, n)
+
+tfidf_words %>% arrange(desc(tf_idf)) %>% head()
+```
+
+There are some interesting results here. What is the tf_idf column telling us? Why might our weights have produced these results?
+
+This is a look into the fascinating world of linguistics --- one reason we're getting these results is because of *Zipf's law of abbreviation*: the more frequently a word is used, the "shorter" the word tends to be. 
+
+### Sentiment Analysis
+
+Even though sentiment analysis isn't a super useful inferential tool, it is still fun to play around with. First, we'll load a pre-trained model containing word-emotion associations. 
+
+```{r}
+sentiments <- get_sentiments("nrc")
+
+df_sentiments <- better_poem_words %>% left_join(sentiments)
+
+df_sentiments_filtered <- df_sentiments %>% filter(!is.na(sentiment)) %>% group_by(sentiment) %>% summarize(n = n())
+
+df_sentiments_filtered %>% 
+  ggplot(aes(x = reorder(sentiment, n, function(n) -n), y = n)) + 
+  geom_bar(stat = "identity") + 
+  theme_light() +
+  theme(axis.text.x = element_text(angle = 60, hjust = 1)) + 
+  xlab("Sentiments")
+
+```
+
+Now it's time for you to explore the data on your own.
