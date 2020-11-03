@@ -157,7 +157,7 @@ get api key and then pass this into r via register_google function
 # GO get your own API before doing the code below! SEE SLIDES
 
 ```{r}
-register_google('AIzaSyAe-GWO4SkMh-fmT-4GCrIbFC2BZ-cu0Nk')
+register_google('YOUR API')
 
 ngaLines = ggmap::get_map(
   location='Nigeria', 
